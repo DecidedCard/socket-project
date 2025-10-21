@@ -1,5 +1,6 @@
 "use client";
 
+import { Player } from "@/types";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 
@@ -9,15 +10,19 @@ export default function Game() {
   const [check, setCheck] = useState<{ color: string; check: boolean }[][]>(
     Array.from({ length: 9 }, () => Array(9).fill({ color: "", check: false }))
   );
+  const [player, setPlayer] = useState<Player>(Player.Black);
 
-  const onClickHandler = (index: [number, number]) => {
+  const onClickHandler = (index: [number, number], player: Player) => {
     setCheck((prev) =>
       prev.map((row, rowIndex) => {
         return row.map((i, idx) =>
-          rowIndex === index[0] && idx === index[1] ? { ...i, check: true } : i
+          rowIndex === index[0] && idx === index[1]
+            ? { color: player, check: true }
+            : i
         );
       })
     );
+    setPlayer((prev) => (prev === Player.Black ? Player.White : Player.Black));
   };
 
   const onClickReset = () => {
@@ -26,6 +31,7 @@ export default function Game() {
         Array(9).fill({ color: "", check: false })
       )
     );
+    setPlayer(Player.Black);
   };
 
   return (
@@ -64,11 +70,21 @@ export default function Game() {
                       className="group flex-1 flex items-center justify-center"
                     >
                       {item.check ? (
-                        <div className="w-1/2 h-1/2 rounded-full bg-black"></div>
+                        <div
+                          className={`w-3/4 h-3/4 rounded-full  ${
+                            item.color === Player.Black
+                              ? "bg-black"
+                              : "border-2"
+                          }`}
+                        ></div>
                       ) : (
                         <button
-                          onClick={() => onClickHandler([rowindex, index])}
-                          className="w-1/2 h-1/2 rounded-full bg-black hidden group-hover:block"
+                          onClick={() =>
+                            onClickHandler([rowindex, index], player)
+                          }
+                          className={`w-3/4 h-3/4 rounded-full hidden group-hover:block ${
+                            player === Player.Black ? "bg-black" : "border-2"
+                          }`}
                         ></button>
                       )}
                     </div>
