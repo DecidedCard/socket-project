@@ -109,7 +109,9 @@ export default function Game() {
                       {item ? (
                         <div
                           className={`w-3/4 h-3/4 rounded-full  ${
-                            item === Player.Black ? "bg-black" : "border-2"
+                            item === Player.Black
+                              ? "bg-black"
+                              : "border-2 bg-white"
                           }`}
                         ></div>
                       ) : (
@@ -119,7 +121,9 @@ export default function Game() {
                               onClickHandler(rowindex, index, player)
                             }
                             className={`w-3/4 h-3/4 rounded-full hidden group-hover:block ${
-                              player === Player.Black ? "bg-black" : "border-2"
+                              player === Player.Black
+                                ? "bg-black"
+                                : "border-2 bg-white"
                             }`}
                           ></button>
                         )
@@ -143,13 +147,13 @@ export default function Game() {
           <div className="flex gap-4">
             <button
               onClick={onClickReset}
-              className="h-10 px-4 flex items-center rounded-2xl bg-white"
+              className="h-10 px-4 flex items-center rounded-2xl bg-white cursor-pointer"
             >
               초기화
             </button>
             <button
               onClick={() => navigation.back()}
-              className="h-10 px-4 flex items-center rounded-2xl bg-white"
+              className="h-10 px-4 flex items-center rounded-2xl bg-white cursor-pointer"
             >
               처음으로
             </button>
