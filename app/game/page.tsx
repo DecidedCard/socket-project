@@ -1,73 +1,14 @@
 "use client";
 
-import { Cell, Player } from "@/types";
+import { SIZE } from "@/const";
+import useGame from "@/hooks/useGame";
+import { Player } from "@/types";
 import { useRouter } from "next/navigation";
-import React, { useCallback, useState } from "react";
-
-const SIZE = 15;
+import React from "react";
 
 export default function Game() {
   const navigation = useRouter();
-  const [check, setCheck] = useState<Cell[][]>(
-    Array.from({ length: SIZE + 1 }, () => Array(SIZE + 1).fill(null))
-  );
-  const [player, setPlayer] = useState<Player>(Player.Black);
-  const [winner, setWinner] = useState<Player | null>(null);
-
-  const inBounds = (r: number, c: number) =>
-    r >= 0 && r < SIZE && c >= 0 && c < SIZE;
-
-  const checkWin = (b: Cell[][], r: number, c: number, p: Player) => {
-    const dirs = [
-      [0, 1],
-      [1, 0],
-      [1, 1],
-      [1, -1],
-    ] as const;
-
-    for (const [dr, dc] of dirs) {
-      let cnt = 1;
-
-      let nr = r + dr,
-        nc = c + dc;
-      while (inBounds(nr, nc) && b[nr][nc] === p) {
-        cnt++;
-        nr += dr;
-        nc += dc;
-      }
-      nr = r - dr;
-      nc = c - dc;
-      while (inBounds(nr, nc) && b[nr][nc] === p) {
-        cnt++;
-        nr -= dr;
-        nc -= dc;
-      }
-
-      if (cnt >= 5) return true;
-    }
-    return false;
-  };
-
-  const onClickHandler = (r: number, c: number, player: Player) => {
-    setCheck((prev) => {
-      const next = prev.map((row) => row.slice());
-      next[r][c] = player;
-
-      if (checkWin(next, r, c, player)) {
-        setWinner(player);
-      }
-      return next;
-    });
-    setPlayer((p) => (p === Player.Black ? Player.White : Player.Black));
-  };
-
-  const onClickReset = () => {
-    setCheck(
-      Array.from({ length: SIZE + 1 }, () => Array(SIZE + 1).fill(null))
-    );
-    setPlayer(Player.Black);
-    setWinner(null);
-  };
+  const { check, player, winner, onClickHandler, onClickReset } = useGame();
 
   return (
     <main className="flex flex-col justify-evenly items-center h-full px-20">
@@ -83,7 +24,7 @@ export default function Game() {
             (row, rowindex) => {
               return (
                 <div key={rowindex} className="flex flex-1">
-                  {row.map((item, index) => {
+                  {row.map((_, index) => {
                     return (
                       <div
                         key={`${rowindex}${index}`}
@@ -115,18 +56,16 @@ export default function Game() {
                           }`}
                         ></div>
                       ) : (
-                        !winner && (
-                          <button
-                            onClick={() =>
-                              onClickHandler(rowindex, index, player)
-                            }
-                            className={`w-3/4 h-3/4 rounded-full hidden group-hover:block ${
-                              player === Player.Black
-                                ? "bg-black"
-                                : "border-2 bg-white"
-                            }`}
-                          ></button>
-                        )
+                        <button
+                          onClick={() =>
+                            onClickHandler(rowindex, index, player)
+                          }
+                          className={`w-3/4 h-3/4 rounded-full hidden group-hover:block ${
+                            player === Player.Black
+                              ? "bg-black"
+                              : "border-2 bg-white"
+                          }`}
+                        ></button>
                       )}
                     </div>
                   );
