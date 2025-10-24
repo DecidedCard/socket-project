@@ -1,7 +1,7 @@
 import { DIRS, SIZE } from "@/const";
 import { Cell, Player } from "@/types";
 import { inBounds } from "@/utill";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const useGame = () => {
   const [check, setCheck] = useState<Cell[][]>(
