@@ -1,22 +1,26 @@
 import { SIZE } from "@/const";
+import { PresenceMeta } from "@/hooks/useGame";
 import { Cell, Player } from "@/types";
 import { useRouter } from "next/navigation";
 import React from "react";
 
 export default function GameBoard({
   check,
+  me,
   player,
   winner,
   onClickHandler,
   onClickReset,
 }: {
   check: Cell[][];
+  me: PresenceMeta | null;
   player: Player;
   winner: string | null;
   onClickHandler: (row: number, col: number, player: Player) => void;
   onClickReset: () => void;
 }) {
   const navigation = useRouter();
+
   return (
     <main className="flex flex-col justify-evenly items-center h-full px-20">
       <button
@@ -63,16 +67,19 @@ export default function GameBoard({
                           }`}
                         ></div>
                       ) : (
-                        <button
-                          onClick={() =>
-                            onClickHandler(rowindex, index, player)
-                          }
-                          className={`w-3/4 h-3/4 rounded-full hidden group-hover:block ${
-                            player === Player.Black
-                              ? "bg-black"
-                              : "border-2 bg-white"
-                          }`}
-                        ></button>
+                        me &&
+                        me.stone === player && (
+                          <button
+                            onClick={() =>
+                              onClickHandler(rowindex, index, player)
+                            }
+                            className={`w-3/4 h-3/4 rounded-full hidden group-hover:block ${
+                              player === Player.Black
+                                ? "bg-black"
+                                : "border-2 bg-white"
+                            }`}
+                          ></button>
+                        )
                       )}
                     </div>
                   );

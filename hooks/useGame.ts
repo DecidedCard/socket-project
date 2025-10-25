@@ -1,6 +1,6 @@
 import { DIRS, SIZE } from "@/const";
 import { Cell, Player } from "@/types";
-import { inBounds } from "@/utill";
+import { checkWin, inBounds } from "@/utill";
 import { supabase } from "@/utill/supabase/client";
 import { RealtimePresenceState } from "@supabase/supabase-js";
 import { useParams } from "next/navigation";
@@ -26,6 +26,8 @@ const useGameBoard = () => {
   const [me, setMe] = useState<PresenceMeta | null>(null);
   const [selectPlayer, setSelectPlayer] = useState(false);
 
+  console.log(player);
+
   const myIdRef = useRef<string>("");
 
   const channel = useMemo(
@@ -37,19 +39,18 @@ const useGameBoard = () => {
   );
 
   useEffect(() => {
-    () => {
+    if (!myIdRef.current) {
       const saved = localStorage.getItem("tab_id");
       if (saved) {
         myIdRef.current = saved;
-        return;
+      } else {
+        const v = crypto.randomUUID();
+        localStorage.setItem("tab_id", v);
+        myIdRef.current = v;
       }
-      const v = crypto.randomUUID();
-      localStorage.setItem("tab_id", v);
-      myIdRef.current = v;
-    };
+    }
   }, []);
 
-  // --- Presence 구독/트래킹 ---
   useEffect(() => {
     const meta: PresenceMeta = {
       id: myIdRef.current,
@@ -85,9 +86,6 @@ const useGameBoard = () => {
       .on("presence", { event: "sync" }, handleSync)
       .on("presence", { event: "join" }, handleJoin)
       .on("presence", { event: "leave" }, handleLeave)
-      .on("broadcast", { event: "user_check" }, (payload: { payload: any }) => {
-        console.log("user_check:", payload.payload);
-      })
       .on(
         "broadcast",
         { event: "select_player" },
@@ -96,21 +94,19 @@ const useGameBoard = () => {
           setSelectPlayer(payload.payload.value);
         }
       )
-      .on(
-        "broadcast",
-        { event: "message_sent" },
-        (payload: { payload: any }) => {
-          console.log("message_sent:", payload.payload);
+      .on("broadcast", { event: "point" }, (payload: { payload: any }) => {
+        console.log("point", payload.payload.next);
+        const { next, r, c, nextPlayer } = payload.payload;
+        if (checkWin(next, r, c, player)) {
+          setWinner(player);
         }
-      )
+
+        setCheck(next);
+        setPlayer(nextPlayer);
+      })
       .subscribe(async (status) => {
         if (status === "SUBSCRIBED") {
           await channel.track(meta);
-          channel.send({
-            type: "broadcast",
-            event: "user_check",
-            payload: { user: meta.nickname, at: new Date().toISOString() },
-          });
         }
       });
 
@@ -152,43 +148,9 @@ const useGameBoard = () => {
     console.error("2명의 플레이어가 있거나 흑돌과 백돌을 선택해야합니다.");
   };
 
-  const onClickhandler = () => {
-    channel.send({
-      type: "broadcast",
-      event: "message_sent",
-      payload: {
-        text: "Hello, world!",
-        user: "john_doe",
-        timestamp: new Date().toISOString(),
-      },
-    });
-  };
-
-  const checkWin = (b: Cell[][], r: number, c: number, p: Player) => {
-    for (const [dr, dc] of DIRS) {
-      let cnt = 1;
-
-      let nr = r + dr,
-        nc = c + dc;
-      while (inBounds(nr, nc) && b[nr][nc] === p) {
-        cnt++;
-        nr += dr;
-        nc += dc;
-      }
-      nr = r - dr;
-      nc = c - dc;
-      while (inBounds(nr, nc) && b[nr][nc] === p) {
-        cnt++;
-        nr -= dr;
-        nc -= dc;
-      }
-
-      if (cnt >= 5) return true;
-    }
-    return false;
-  };
-
   const onClickHandler = (r: number, c: number, player: Player) => {
+    const nextPlayer = player === Player.Black ? Player.White : Player.Black;
+
     setCheck((prev) => {
       const next = prev.map((row) => row.slice());
       next[r][c] = player;
@@ -196,9 +158,16 @@ const useGameBoard = () => {
       if (checkWin(next, r, c, player)) {
         setWinner(player);
       }
+
+      channel.send({
+        type: "broadcast",
+        event: "point",
+        payload: { next, r, c, nextPlayer },
+      });
       return next;
     });
-    setPlayer((p) => (p === Player.Black ? Player.White : Player.Black));
+
+    setPlayer(nextPlayer);
   };
 
   const onClickReset = () => {
@@ -211,6 +180,7 @@ const useGameBoard = () => {
 
   return {
     check,
+    me,
     player,
     members,
     selectPlayer,

@@ -8,6 +8,7 @@ import React from "react";
 export default function Game() {
   const {
     check,
+    me,
     player,
     members,
     selectPlayer,
@@ -21,6 +22,7 @@ export default function Game() {
   return selectPlayer ? (
     <GameBoard
       check={check}
+      me={me}
       player={player}
       winner={winner}
       onClickHandler={onClickHandler}
