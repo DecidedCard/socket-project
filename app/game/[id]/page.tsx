@@ -6,8 +6,17 @@ import useGameBoard from "@/hooks/useGame";
 import React from "react";
 
 export default function Game() {
-  const { check, player, selectPlayer, winner, onClickHandler, onClickReset } =
-    useGameBoard();
+  const {
+    check,
+    player,
+    members,
+    selectPlayer,
+    winner,
+    onClickUpdateStoneHandler,
+    onClickGameStartHandler,
+    onClickHandler,
+    onClickReset,
+  } = useGameBoard();
 
   return selectPlayer ? (
     <GameBoard
@@ -18,6 +27,10 @@ export default function Game() {
       onClickReset={onClickReset}
     />
   ) : (
-    <SelectPlayer />
+    <SelectPlayer
+      members={members}
+      onClickUpdateStoneHandler={onClickUpdateStoneHandler}
+      onClickGameStartHandler={onClickGameStartHandler}
+    />
   );
 }

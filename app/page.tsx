@@ -1,6 +1,5 @@
 "use client";
 
-import { Room } from "@/types";
 import { supabase } from "@/utill/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";

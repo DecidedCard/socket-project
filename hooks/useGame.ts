@@ -6,7 +6,7 @@ import { RealtimePresenceState } from "@supabase/supabase-js";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-type PresenceMeta = {
+export type PresenceMeta = {
   id: string;
   nickname: string;
   role: "player" | "spectator";
@@ -25,9 +25,6 @@ const useGameBoard = () => {
   const [members, setMembers] = useState<PresenceMeta[]>([]);
   const [me, setMe] = useState<PresenceMeta | null>(null);
   const [selectPlayer, setSelectPlayer] = useState(false);
-
-  console.log("members", members);
-  console.log("me", me);
 
   const myIdRef = useRef<string>("");
 
@@ -68,19 +65,6 @@ const useGameBoard = () => {
         .flat()
         .map(({ presence_ref, ...meta }) => meta);
 
-      const players = list.filter((m) => m.role === "player");
-      const hasBlack = players.some((m) => m.stone === Player.Black);
-      const hasWhite = players.some((m) => m.stone === Player.White);
-
-      const i = list.findIndex((m) => m.id === myIdRef.current);
-      if (i >= 0 && list[i].role === "player" && list[i].stone === undefined) {
-        if (!hasBlack) list[i].stone = Player.Black;
-        else if (!hasWhite) list[i].stone = Player.White;
-        else {
-          list[i].role = "spectator";
-        }
-      }
-
       setMembers(list);
       const mine = list.find((m) => m.id === myIdRef.current) ?? null;
       setMe(mine);
@@ -106,6 +90,14 @@ const useGameBoard = () => {
       })
       .on(
         "broadcast",
+        { event: "select_player" },
+        (payload: { payload: any }) => {
+          console.log("select_player:", payload.payload.value);
+          setSelectPlayer(payload.payload.value);
+        }
+      )
+      .on(
+        "broadcast",
         { event: "message_sent" },
         (payload: { payload: any }) => {
           console.log("message_sent:", payload.payload);
@@ -127,17 +119,38 @@ const useGameBoard = () => {
     };
   }, [channel]);
 
-  useEffect(() => {
-    channel
-      .on("broadcast", { event: "user_check" }, (payload: { payload: any }) => {
-        console.log("New message:", payload.payload);
-      })
-      .subscribe();
+  const onClickUpdateStoneHandler = async (stone: Player) => {
+    if (!me) return;
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+    if (members.some((i) => i.stone === stone)) {
+      console.log("이미 선택한 사람이 있습니다.");
+      return;
+    }
+
+    await channel.track({
+      ...me,
+      stone,
+    });
+  };
+
+  const onClickGameStartHandler = () => {
+    const check =
+      members.length === 2 &&
+      members.some((i) => i.stone === Player.Black) &&
+      members.some((i) => i.stone === Player.White);
+
+    if (check) {
+      setSelectPlayer(true);
+      channel.send({
+        type: "broadcast",
+        event: "select_player",
+        payload: { value: true },
+      });
+      return;
+    }
+
+    console.error("2명의 플레이어가 있거나 흑돌과 백돌을 선택해야합니다.");
+  };
 
   const onClickhandler = () => {
     channel.send({
@@ -196,7 +209,17 @@ const useGameBoard = () => {
     setWinner(null);
   };
 
-  return { check, player, selectPlayer, winner, onClickHandler, onClickReset };
+  return {
+    check,
+    player,
+    members,
+    selectPlayer,
+    winner,
+    onClickUpdateStoneHandler,
+    onClickGameStartHandler,
+    onClickHandler,
+    onClickReset,
+  };
 };
 
 export default useGameBoard;
