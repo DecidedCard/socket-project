@@ -1,16 +1,22 @@
-"use client";
-
 import { SIZE } from "@/const";
-import useGameBoard from "@/hooks/useGame";
-import { Player } from "@/types";
+import { Cell, Player } from "@/types";
 import { useRouter } from "next/navigation";
 import React from "react";
 
-export default function Game() {
+export default function GameBoard({
+  check,
+  player,
+  winner,
+  onClickHandler,
+  onClickReset,
+}: {
+  check: Cell[][];
+  player: Player;
+  winner: string | null;
+  onClickHandler: (row: number, col: number, player: Player) => void;
+  onClickReset: () => void;
+}) {
   const navigation = useRouter();
-  const { check, player, winner, onClickHandler, onClickReset } =
-    useGameBoard();
-
   return (
     <main className="flex flex-col justify-evenly items-center h-full px-20">
       <button
