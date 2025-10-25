@@ -26,8 +26,6 @@ const useGameBoard = () => {
   const [me, setMe] = useState<PresenceMeta | null>(null);
   const [selectPlayer, setSelectPlayer] = useState(false);
 
-  console.log(player);
-
   const myIdRef = useRef<string>("");
 
   const channel = useMemo(
@@ -54,7 +52,7 @@ const useGameBoard = () => {
   useEffect(() => {
     const meta: PresenceMeta = {
       id: myIdRef.current,
-      nickname: "닉네임1",
+      nickname: myIdRef.current.slice(0, 6),
       role: "player",
       stone: undefined,
     };
@@ -74,12 +72,10 @@ const useGameBoard = () => {
     const handleJoin = (payload: any) => {
       // 새 입장자 정보 payload.newPresences
       // 필요 시 토스트/알림 등
-      // console.log("join:", payload);
     };
 
     const handleLeave = (payload: any) => {
       // 퇴장자 정보 payload.leftPresences
-      // console.log("leave:", payload);
     };
 
     channel
@@ -90,19 +86,24 @@ const useGameBoard = () => {
         "broadcast",
         { event: "select_player" },
         (payload: { payload: any }) => {
-          console.log("select_player:", payload.payload.value);
           setSelectPlayer(payload.payload.value);
         }
       )
       .on("broadcast", { event: "point" }, (payload: { payload: any }) => {
-        console.log("point", payload.payload.next);
-        const { next, r, c, nextPlayer } = payload.payload;
-        if (checkWin(next, r, c, player)) {
-          setWinner(player);
+        const { next, nextPlayer, winner } = payload.payload;
+        setCheck(next);
+        if (winner) {
+          setWinner(winner);
         }
 
-        setCheck(next);
         setPlayer(nextPlayer);
+      })
+      .on("broadcast", { event: "reset" }, (payload: { payload: any }) => {
+        setCheck(
+          Array.from({ length: SIZE + 1 }, () => Array(SIZE + 1).fill(null))
+        );
+        setPlayer(Player.Black);
+        setWinner(null);
       })
       .subscribe(async (status) => {
         if (status === "SUBSCRIBED") {
@@ -119,7 +120,6 @@ const useGameBoard = () => {
     if (!me) return;
 
     if (members.some((i) => i.stone === stone)) {
-      console.log("이미 선택한 사람이 있습니다.");
       return;
     }
 
@@ -154,16 +154,19 @@ const useGameBoard = () => {
     setCheck((prev) => {
       const next = prev.map((row) => row.slice());
       next[r][c] = player;
+      let winCheck = "";
 
       if (checkWin(next, r, c, player)) {
         setWinner(player);
+        winCheck = player;
       }
 
       channel.send({
         type: "broadcast",
         event: "point",
-        payload: { next, r, c, nextPlayer },
+        payload: { next, nextPlayer, winner: winCheck },
       });
+
       return next;
     });
 
@@ -171,6 +174,8 @@ const useGameBoard = () => {
   };
 
   const onClickReset = () => {
+    channel.send({ type: "broadcast", event: "reset", payload: true });
+
     setCheck(
       Array.from({ length: SIZE + 1 }, () => Array(SIZE + 1).fill(null))
     );
