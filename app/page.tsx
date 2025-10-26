@@ -25,37 +25,26 @@ export default function Home() {
   const onClickEnterHandler = async () => {
     if (!input) {
       alert("참가할 방을 입력해주세요");
-    }
-
-    let { data: channel, error } = await supabase
-      .from("channel")
-      .select("*")
-      .eq("id", input);
-
-    if (error) {
-      console.error("insert error", error);
       return;
     }
 
-    if (!!channel?.length) {
-      if (channel[0].check) {
-        alert("인원이 가득찼습니다.");
-        return;
-      }
+    const { data, error } = await supabase
+      .from("channel")
+      .update({ check: true })
+      .eq("id", input)
+      .eq("check", false)
+      .select();
 
-      const { data, error } = await supabase
-        .from("channel")
-        .update({ check: true })
-        .eq("id", channel[0].id)
-        .select();
+    if (error) {
+      console.error("update error", error);
+      alert("방 참가 중 오류가 발생했습니다.");
+      return;
+    }
 
-      if (error) {
-        console.error("update error", error);
-        alert("방을 참가하는 중에 문제가 발생하였습니다.");
-        return;
-      }
-
+    if (data?.length) {
       navigation.push(`/game/${data[0].id}`);
+    } else {
+      alert("방이 존재하지 않거나 인원이 가득 찼습니다.");
     }
   };
 

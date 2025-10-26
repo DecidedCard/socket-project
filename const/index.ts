@@ -1,4 +1,4 @@
-export const SIZE = 15;
+export const SIZE = 16;
 
 export const DIRS = [
   [0, 1],

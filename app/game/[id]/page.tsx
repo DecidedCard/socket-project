@@ -3,36 +3,16 @@
 import GameBoard from "@/components/GameBoard";
 import SelectPlayer from "@/components/SelectPlayer";
 import useGameBoard from "@/hooks/useGame";
+import { useParams } from "next/navigation";
 import React from "react";
 
 export default function Game() {
-  const {
-    check,
-    me,
-    player,
-    members,
-    selectPlayer,
-    winner,
-    onClickUpdateStoneHandler,
-    onClickGameStartHandler,
-    onClickHandler,
-    onClickReset,
-  } = useGameBoard();
+  const { id } = useParams();
+  const game = useGameBoard(id);
 
-  return selectPlayer ? (
-    <GameBoard
-      check={check}
-      me={me}
-      player={player}
-      winner={winner}
-      onClickHandler={onClickHandler}
-      onClickReset={onClickReset}
-    />
+  return game.selectPlayer ? (
+    <GameBoard game={game} />
   ) : (
-    <SelectPlayer
-      members={members}
-      onClickUpdateStoneHandler={onClickUpdateStoneHandler}
-      onClickGameStartHandler={onClickGameStartHandler}
-    />
+    <SelectPlayer game={game} />
   );
 }

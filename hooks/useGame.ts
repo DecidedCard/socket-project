@@ -1,9 +1,9 @@
-import { DIRS, SIZE } from "@/const";
+import { SIZE } from "@/const";
 import { Cell, Player } from "@/types";
-import { checkWin, inBounds } from "@/utill";
+import { checkWin, resetGame } from "@/utill";
 import { supabase } from "@/utill/supabase/client";
 import { RealtimePresenceState } from "@supabase/supabase-js";
-import { useParams } from "next/navigation";
+import { ParamValue } from "next/dist/server/request/params";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 export type PresenceMeta = {
@@ -15,10 +15,9 @@ export type PresenceMeta = {
 
 type PresenceRow = PresenceMeta & { presence_ref: string };
 
-const useGameBoard = () => {
-  const { id } = useParams();
+const useGameBoard = (id?: ParamValue) => {
   const [check, setCheck] = useState<Cell[][]>(
-    Array.from({ length: SIZE + 1 }, () => Array(SIZE + 1).fill(null))
+    Array.from({ length: SIZE }, () => Array(SIZE).fill(null))
   );
   const [player, setPlayer] = useState<Player>(Player.Black);
   const [winner, setWinner] = useState<Player | null>(null);
@@ -26,33 +25,28 @@ const useGameBoard = () => {
   const [me, setMe] = useState<PresenceMeta | null>(null);
   const [selectPlayer, setSelectPlayer] = useState(false);
 
-  const myIdRef = useRef<string>("");
-
-  const channel = useMemo(
-    () =>
-      supabase.channel(`room:${id}`, {
-        config: { presence: { key: myIdRef.current } },
-      }),
-    [id]
-  );
-
-  useEffect(() => {
-    if (!myIdRef.current) {
-      const saved = localStorage.getItem("tab_id");
-      if (saved) {
-        myIdRef.current = saved;
-      } else {
-        const v = crypto.randomUUID();
-        localStorage.setItem("tab_id", v);
-        myIdRef.current = v;
-      }
-    }
+  const myId = useMemo(() => {
+    if (typeof window === "undefined") return ""; // SSR 안전장치
+    const saved = localStorage.getItem("tab_id");
+    if (saved) return saved;
+    const v = crypto.randomUUID();
+    localStorage.setItem("tab_id", v);
+    return v;
   }, []);
 
+  const channel = useMemo(() => {
+    if (!id || !myId) return null;
+    return supabase.channel(`room:${id}`, {
+      config: { presence: { key: myId } },
+    });
+  }, [id, myId]);
+
   useEffect(() => {
+    if (!channel || !id) return;
+
     const meta: PresenceMeta = {
-      id: myIdRef.current,
-      nickname: myIdRef.current.slice(0, 6),
+      id: myId,
+      nickname: myId.slice(0, 6),
       role: "player",
       stone: undefined,
     };
@@ -65,7 +59,7 @@ const useGameBoard = () => {
         .map(({ presence_ref, ...meta }) => meta);
 
       setMembers(list);
-      const mine = list.find((m) => m.id === myIdRef.current) ?? null;
+      const mine = list.find((m) => m.id === myId) ?? null;
       setMe(mine);
     };
 
@@ -85,25 +79,31 @@ const useGameBoard = () => {
       .on(
         "broadcast",
         { event: "select_player" },
-        (payload: { payload: any }) => {
+        (payload: { payload: { value: boolean } }) => {
           setSelectPlayer(payload.payload.value);
         }
       )
-      .on("broadcast", { event: "point" }, (payload: { payload: any }) => {
-        const { next, nextPlayer, winner } = payload.payload;
-        setCheck(next);
-        if (winner) {
-          setWinner(winner);
-        }
+      .on(
+        "broadcast",
+        { event: "point" },
+        (payload: {
+          payload: {
+            next: Cell[][];
+            nextPlayer: Player;
+            winner: Player | null;
+          };
+        }) => {
+          const { next, nextPlayer, winner } = payload.payload;
+          setCheck(next);
+          if (winner) {
+            setWinner(winner);
+          }
 
-        setPlayer(nextPlayer);
-      })
-      .on("broadcast", { event: "reset" }, (payload: { payload: any }) => {
-        setCheck(
-          Array.from({ length: SIZE + 1 }, () => Array(SIZE + 1).fill(null))
-        );
-        setPlayer(Player.Black);
-        setWinner(null);
+          setPlayer(nextPlayer);
+        }
+      )
+      .on("broadcast", { event: "reset" }, () => {
+        resetGame({ setCheck, setPlayer, setWinner });
       })
       .subscribe(async (status) => {
         if (status === "SUBSCRIBED") {
@@ -123,7 +123,7 @@ const useGameBoard = () => {
       return;
     }
 
-    await channel.track({
+    await channel!.track({
       ...me,
       stone,
     });
@@ -137,7 +137,7 @@ const useGameBoard = () => {
 
     if (check) {
       setSelectPlayer(true);
-      channel.send({
+      channel!.send({
         type: "broadcast",
         event: "select_player",
         payload: { value: true },
@@ -146,6 +146,7 @@ const useGameBoard = () => {
     }
 
     console.error("2명의 플레이어가 있거나 흑돌과 백돌을 선택해야합니다.");
+    alert("2명의 플레이어가 있거나 흑돌과 백돌을 선택해야합니다.");
   };
 
   const onClickHandler = (r: number, c: number, player: Player) => {
@@ -154,18 +155,20 @@ const useGameBoard = () => {
     setCheck((prev) => {
       const next = prev.map((row) => row.slice());
       next[r][c] = player;
-      let winCheck = "";
+      let winCheck: Player | null = null;
 
       if (checkWin(next, r, c, player)) {
         setWinner(player);
         winCheck = player;
       }
 
-      channel.send({
-        type: "broadcast",
-        event: "point",
-        payload: { next, nextPlayer, winner: winCheck },
-      });
+      if (id && channel) {
+        channel.send({
+          type: "broadcast",
+          event: "point",
+          payload: { next, nextPlayer, winner: winCheck },
+        });
+      }
 
       return next;
     });
@@ -174,13 +177,10 @@ const useGameBoard = () => {
   };
 
   const onClickReset = () => {
-    channel.send({ type: "broadcast", event: "reset", payload: true });
-
-    setCheck(
-      Array.from({ length: SIZE + 1 }, () => Array(SIZE + 1).fill(null))
-    );
-    setPlayer(Player.Black);
-    setWinner(null);
+    if (id && channel) {
+      channel.send({ type: "broadcast", event: "reset", payload: true });
+    }
+    resetGame({ setCheck, setPlayer, setWinner });
   };
 
   return {
@@ -198,3 +198,5 @@ const useGameBoard = () => {
 };
 
 export default useGameBoard;
+
+export type GameBoardReturn = ReturnType<typeof useGameBoard>;

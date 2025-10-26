@@ -1,24 +1,10 @@
 import { SIZE } from "@/const";
-import { PresenceMeta } from "@/hooks/useGame";
-import { Cell, Player } from "@/types";
+import { GameBoardReturn, PresenceMeta } from "@/hooks/useGame";
+import { Player } from "@/types";
 import { useRouter } from "next/navigation";
 import React from "react";
 
-export default function GameBoard({
-  check,
-  me,
-  player,
-  winner,
-  onClickHandler,
-  onClickReset,
-}: {
-  check: Cell[][];
-  me: PresenceMeta | null;
-  player: Player;
-  winner: string | null;
-  onClickHandler: (row: number, col: number, player: Player) => void;
-  onClickReset: () => void;
-}) {
+export default function GameBoard({ game }: { game: GameBoardReturn }) {
   const navigation = useRouter();
 
   return (
@@ -31,7 +17,7 @@ export default function GameBoard({
       </button>
       <article className="relative w-full max-w-[900px] aspect-square">
         <div className="flex flex-col border h-full">
-          {Array.from({ length: SIZE }, () => Array(SIZE).fill(0)).map(
+          {Array.from({ length: SIZE - 1 }, () => Array(SIZE - 1).fill(0)).map(
             (row, rowindex) => {
               return (
                 <div key={rowindex} className="flex flex-1">
@@ -49,7 +35,7 @@ export default function GameBoard({
           )}
         </div>
         <div className="absolute -inset-[3%] flex flex-col">
-          {check.map((row, rowindex) => {
+          {game.check.map((row, rowindex) => {
             return (
               <div key={rowindex} className="flex flex-1">
                 {row.map((item, index) => {
@@ -67,14 +53,13 @@ export default function GameBoard({
                           }`}
                         ></div>
                       ) : (
-                        me &&
-                        me.stone === player && (
+                        (!game.me || game.me.stone === game.player) && (
                           <button
                             onClick={() =>
-                              onClickHandler(rowindex, index, player)
+                              game.onClickHandler(rowindex, index, game.player)
                             }
                             className={`w-3/4 h-3/4 rounded-full hidden group-hover:block ${
-                              player === Player.Black
+                              game.player === Player.Black
                                 ? "bg-black"
                                 : "border-2 bg-white"
                             }`}
@@ -89,17 +74,17 @@ export default function GameBoard({
           })}
         </div>
       </article>
-      <button onClick={onClickReset} className="cursor-pointer">
+      <button onClick={game.onClickReset} className="cursor-pointer">
         초기화
       </button>
-      {winner && (
+      {game.winner && (
         <article className="absolute w-full h-full z-10 flex flex-col gap-10 items-center justify-center bg-black/60">
           <div className="h-14 rounded-2xl bg-white flex items-center px-10">
-            {winner === Player.Black ? "흑돌" : "백돌"}이 승리했습니다.
+            {game.winner === Player.Black ? "흑돌" : "백돌"}이 승리했습니다.
           </div>
           <div className="flex gap-4">
             <button
-              onClick={onClickReset}
+              onClick={game.onClickReset}
               className="h-10 px-4 flex items-center rounded-2xl bg-white cursor-pointer"
             >
               초기화
