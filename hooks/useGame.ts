@@ -79,20 +79,26 @@ const useGameBoard = (id?: ParamValue) => {
       .on(
         "broadcast",
         { event: "select_player" },
-        (payload: { payload: any }) => {
+        (payload: { payload: { value: boolean } }) => {
           setSelectPlayer(payload.payload.value);
         }
       )
-      .on("broadcast", { event: "point" }, (payload: { payload: any }) => {
-        const { next, nextPlayer, winner } = payload.payload;
-        setCheck(next);
-        if (winner) {
-          setWinner(winner);
-        }
+      .on(
+        "broadcast",
+        { event: "point" },
+        (payload: {
+          payload: { next: Cell[][]; nextPlayer: Player; winner: Player };
+        }) => {
+          const { next, nextPlayer, winner } = payload.payload;
+          setCheck(next);
+          if (winner) {
+            setWinner(winner);
+          }
 
-        setPlayer(nextPlayer);
-      })
-      .on("broadcast", { event: "reset" }, (payload: { payload: any }) => {
+          setPlayer(nextPlayer);
+        }
+      )
+      .on("broadcast", { event: "reset" }, () => {
         setCheck(Array.from({ length: SIZE }, () => Array(SIZE).fill(null)));
         setPlayer(Player.Black);
         setWinner(null);
