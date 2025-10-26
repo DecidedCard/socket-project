@@ -17,13 +17,11 @@ export default function SelectPlayer({ game }: { game: GameBoardReturn }) {
         <div className="flex justify-evenly w-full">
           <div className="flex flex-col">
             <span>흑돌</span>
-            {game.members.map((i, idx) =>
-              i.stone === Player.Black ? (
+            {game.members
+              .filter((i) => i.stone === Player.Black)
+              .map((i, idx) => (
                 <div key={idx}>{i.nickname}</div>
-              ) : (
-                false
-              )
-            )}
+              ))}
             <button
               onClick={() => game.onClickUpdateStoneHandler(Player.Black)}
             >
@@ -32,13 +30,11 @@ export default function SelectPlayer({ game }: { game: GameBoardReturn }) {
           </div>
           <div className="flex flex-col">
             <span>백돌</span>
-            {game.members.map((i, idx) =>
-              i.stone === Player.White ? (
+            {game.members
+              .filter((i) => i.stone === Player.White)
+              .map((i, idx) => (
                 <div key={idx}>{i.nickname}</div>
-              ) : (
-                false
-              )
-            )}
+              ))}
             <button
               onClick={() => game.onClickUpdateStoneHandler(Player.White)}
             >
