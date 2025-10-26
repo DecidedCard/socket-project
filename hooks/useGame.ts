@@ -144,6 +144,7 @@ const useGameBoard = (id?: ParamValue) => {
     }
 
     console.error("2명의 플레이어가 있거나 흑돌과 백돌을 선택해야합니다.");
+    alert("2명의 플레이어가 있거나 흑돌과 백돌을 선택해야합니다.");
   };
 
   const onClickHandler = (r: number, c: number, player: Player) => {
