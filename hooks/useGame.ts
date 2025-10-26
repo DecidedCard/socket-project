@@ -25,33 +25,28 @@ const useGameBoard = (id?: ParamValue) => {
   const [me, setMe] = useState<PresenceMeta | null>(null);
   const [selectPlayer, setSelectPlayer] = useState(false);
 
-  const myIdRef = useRef<string>("");
-
-  const channel = useMemo(
-    () =>
-      supabase.channel(`room:${id}`, {
-        config: { presence: { key: myIdRef.current } },
-      }),
-    [id, myIdRef]
-  );
-
-  useEffect(() => {
-    if (!myIdRef.current) {
-      const saved = localStorage.getItem("tab_id");
-      if (saved) {
-        myIdRef.current = saved;
-      } else {
-        const v = crypto.randomUUID();
-        localStorage.setItem("tab_id", v);
-        myIdRef.current = v;
-      }
-    }
+  const myId = useMemo(() => {
+    if (typeof window === "undefined") return ""; // SSR 안전장치
+    const saved = localStorage.getItem("tab_id");
+    if (saved) return saved;
+    const v = crypto.randomUUID();
+    localStorage.setItem("tab_id", v);
+    return v;
   }, []);
 
+  const channel = useMemo(() => {
+    if (!id || !myId) return null;
+    return supabase.channel(`room:${id}`, {
+      config: { presence: { key: myId } },
+    });
+  }, [id, myId]);
+
   useEffect(() => {
+    if (!channel || !id) return;
+
     const meta: PresenceMeta = {
-      id: myIdRef.current,
-      nickname: myIdRef.current.slice(0, 6),
+      id: myId,
+      nickname: myId.slice(0, 6),
       role: "player",
       stone: undefined,
     };
@@ -64,7 +59,7 @@ const useGameBoard = (id?: ParamValue) => {
         .map(({ presence_ref, ...meta }) => meta);
 
       setMembers(list);
-      const mine = list.find((m) => m.id === myIdRef.current) ?? null;
+      const mine = list.find((m) => m.id === myId) ?? null;
       setMe(mine);
     };
 
@@ -77,42 +72,40 @@ const useGameBoard = (id?: ParamValue) => {
       // 퇴장자 정보 payload.leftPresences
     };
 
-    if (id) {
-      channel
-        .on("presence", { event: "sync" }, handleSync)
-        .on("presence", { event: "join" }, handleJoin)
-        .on("presence", { event: "leave" }, handleLeave)
-        .on(
-          "broadcast",
-          { event: "select_player" },
-          (payload: { payload: any }) => {
-            setSelectPlayer(payload.payload.value);
-          }
-        )
-        .on("broadcast", { event: "point" }, (payload: { payload: any }) => {
-          const { next, nextPlayer, winner } = payload.payload;
-          setCheck(next);
-          if (winner) {
-            setWinner(winner);
-          }
+    channel
+      .on("presence", { event: "sync" }, handleSync)
+      .on("presence", { event: "join" }, handleJoin)
+      .on("presence", { event: "leave" }, handleLeave)
+      .on(
+        "broadcast",
+        { event: "select_player" },
+        (payload: { payload: any }) => {
+          setSelectPlayer(payload.payload.value);
+        }
+      )
+      .on("broadcast", { event: "point" }, (payload: { payload: any }) => {
+        const { next, nextPlayer, winner } = payload.payload;
+        setCheck(next);
+        if (winner) {
+          setWinner(winner);
+        }
 
-          setPlayer(nextPlayer);
-        })
-        .on("broadcast", { event: "reset" }, (payload: { payload: any }) => {
-          setCheck(Array.from({ length: SIZE }, () => Array(SIZE).fill(null)));
-          setPlayer(Player.Black);
-          setWinner(null);
-        })
-        .subscribe(async (status) => {
-          if (status === "SUBSCRIBED") {
-            await channel.track(meta);
-          }
-        });
+        setPlayer(nextPlayer);
+      })
+      .on("broadcast", { event: "reset" }, (payload: { payload: any }) => {
+        setCheck(Array.from({ length: SIZE }, () => Array(SIZE).fill(null)));
+        setPlayer(Player.Black);
+        setWinner(null);
+      })
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          await channel.track(meta);
+        }
+      });
 
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    }
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [channel]);
 
   const onClickUpdateStoneHandler = async (stone: Player) => {
@@ -122,7 +115,7 @@ const useGameBoard = (id?: ParamValue) => {
       return;
     }
 
-    await channel.track({
+    await channel!.track({
       ...me,
       stone,
     });
@@ -136,7 +129,7 @@ const useGameBoard = (id?: ParamValue) => {
 
     if (check) {
       setSelectPlayer(true);
-      channel.send({
+      channel!.send({
         type: "broadcast",
         event: "select_player",
         payload: { value: true },
@@ -160,7 +153,7 @@ const useGameBoard = (id?: ParamValue) => {
         winCheck = player;
       }
 
-      if (id) {
+      if (id && channel) {
         channel.send({
           type: "broadcast",
           event: "point",
@@ -175,7 +168,7 @@ const useGameBoard = (id?: ParamValue) => {
   };
 
   const onClickReset = () => {
-    if (id) {
+    if (id && channel) {
       channel.send({ type: "broadcast", event: "reset", payload: true });
     }
     setCheck(Array.from({ length: SIZE }, () => Array(SIZE).fill(null)));
