@@ -31,7 +31,7 @@ export default function GameBoard({
       </button>
       <article className="relative w-full max-w-[900px] aspect-square">
         <div className="flex flex-col border h-full">
-          {Array.from({ length: SIZE }, () => Array(SIZE).fill(0)).map(
+          {Array.from({ length: SIZE - 3 }, () => Array(SIZE - 3).fill(0)).map(
             (row, rowindex) => {
               return (
                 <div key={rowindex} className="flex flex-1">

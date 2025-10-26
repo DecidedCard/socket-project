@@ -3,7 +3,7 @@
 import { SIZE } from "@/const";
 import useGameBoard from "@/hooks/useGame";
 import { Player } from "@/types";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import React from "react";
 
 export default function Game() {
@@ -14,14 +14,14 @@ export default function Game() {
   return (
     <main className="flex flex-col justify-evenly items-center h-full px-20">
       <button
-        className="absolute top-2 right-2 cursor-pointer"
+        className="fixed top-2 right-2 cursor-pointer"
         onClick={() => navigation.replace("/")}
       >
         뒤로가기
       </button>
       <article className="relative w-full max-w-[900px] aspect-square">
         <div className="flex flex-col border h-full">
-          {Array.from({ length: SIZE }, () => Array(SIZE).fill(0)).map(
+          {Array.from({ length: SIZE - 1 }, () => Array(SIZE - 1).fill(0)).map(
             (row, rowindex) => {
               return (
                 <div key={rowindex} className="flex flex-1">
@@ -76,6 +76,7 @@ export default function Game() {
           })}
         </div>
       </article>
+
       <button onClick={onClickReset} className="cursor-pointer">
         초기화
       </button>

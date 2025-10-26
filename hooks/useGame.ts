@@ -1,9 +1,9 @@
-import { DIRS, SIZE } from "@/const";
+import { SIZE } from "@/const";
 import { Cell, Player } from "@/types";
-import { checkWin, inBounds } from "@/utill";
+import { checkWin } from "@/utill";
 import { supabase } from "@/utill/supabase/client";
 import { RealtimePresenceState } from "@supabase/supabase-js";
-import { useParams } from "next/navigation";
+import { ParamValue } from "next/dist/server/request/params";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 export type PresenceMeta = {
@@ -15,10 +15,9 @@ export type PresenceMeta = {
 
 type PresenceRow = PresenceMeta & { presence_ref: string };
 
-const useGameBoard = () => {
-  const { id } = useParams();
+const useGameBoard = (id?: ParamValue) => {
   const [check, setCheck] = useState<Cell[][]>(
-    Array.from({ length: SIZE + 1 }, () => Array(SIZE + 1).fill(null))
+    Array.from({ length: SIZE }, () => Array(SIZE).fill(null))
   );
   const [player, setPlayer] = useState<Player>(Player.Black);
   const [winner, setWinner] = useState<Player | null>(null);
@@ -33,7 +32,7 @@ const useGameBoard = () => {
       supabase.channel(`room:${id}`, {
         config: { presence: { key: myIdRef.current } },
       }),
-    [id]
+    [id, myIdRef]
   );
 
   useEffect(() => {
@@ -78,42 +77,42 @@ const useGameBoard = () => {
       // 퇴장자 정보 payload.leftPresences
     };
 
-    channel
-      .on("presence", { event: "sync" }, handleSync)
-      .on("presence", { event: "join" }, handleJoin)
-      .on("presence", { event: "leave" }, handleLeave)
-      .on(
-        "broadcast",
-        { event: "select_player" },
-        (payload: { payload: any }) => {
-          setSelectPlayer(payload.payload.value);
-        }
-      )
-      .on("broadcast", { event: "point" }, (payload: { payload: any }) => {
-        const { next, nextPlayer, winner } = payload.payload;
-        setCheck(next);
-        if (winner) {
-          setWinner(winner);
-        }
+    if (id) {
+      channel
+        .on("presence", { event: "sync" }, handleSync)
+        .on("presence", { event: "join" }, handleJoin)
+        .on("presence", { event: "leave" }, handleLeave)
+        .on(
+          "broadcast",
+          { event: "select_player" },
+          (payload: { payload: any }) => {
+            setSelectPlayer(payload.payload.value);
+          }
+        )
+        .on("broadcast", { event: "point" }, (payload: { payload: any }) => {
+          const { next, nextPlayer, winner } = payload.payload;
+          setCheck(next);
+          if (winner) {
+            setWinner(winner);
+          }
 
-        setPlayer(nextPlayer);
-      })
-      .on("broadcast", { event: "reset" }, (payload: { payload: any }) => {
-        setCheck(
-          Array.from({ length: SIZE + 1 }, () => Array(SIZE + 1).fill(null))
-        );
-        setPlayer(Player.Black);
-        setWinner(null);
-      })
-      .subscribe(async (status) => {
-        if (status === "SUBSCRIBED") {
-          await channel.track(meta);
-        }
-      });
+          setPlayer(nextPlayer);
+        })
+        .on("broadcast", { event: "reset" }, (payload: { payload: any }) => {
+          setCheck(Array.from({ length: SIZE }, () => Array(SIZE).fill(null)));
+          setPlayer(Player.Black);
+          setWinner(null);
+        })
+        .subscribe(async (status) => {
+          if (status === "SUBSCRIBED") {
+            await channel.track(meta);
+          }
+        });
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
   }, [channel]);
 
   const onClickUpdateStoneHandler = async (stone: Player) => {
@@ -161,11 +160,13 @@ const useGameBoard = () => {
         winCheck = player;
       }
 
-      channel.send({
-        type: "broadcast",
-        event: "point",
-        payload: { next, nextPlayer, winner: winCheck },
-      });
+      if (id) {
+        channel.send({
+          type: "broadcast",
+          event: "point",
+          payload: { next, nextPlayer, winner: winCheck },
+        });
+      }
 
       return next;
     });
@@ -174,11 +175,10 @@ const useGameBoard = () => {
   };
 
   const onClickReset = () => {
-    channel.send({ type: "broadcast", event: "reset", payload: true });
-
-    setCheck(
-      Array.from({ length: SIZE + 1 }, () => Array(SIZE + 1).fill(null))
-    );
+    if (id) {
+      channel.send({ type: "broadcast", event: "reset", payload: true });
+    }
+    setCheck(Array.from({ length: SIZE }, () => Array(SIZE).fill(null)));
     setPlayer(Player.Black);
     setWinner(null);
   };
