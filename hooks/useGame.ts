@@ -87,7 +87,11 @@ const useGameBoard = (id?: ParamValue) => {
         "broadcast",
         { event: "point" },
         (payload: {
-          payload: { next: Cell[][]; nextPlayer: Player; winner: Player };
+          payload: {
+            next: Cell[][];
+            nextPlayer: Player;
+            winner: Player | null;
+          };
         }) => {
           const { next, nextPlayer, winner } = payload.payload;
           setCheck(next);
@@ -151,7 +155,7 @@ const useGameBoard = (id?: ParamValue) => {
     setCheck((prev) => {
       const next = prev.map((row) => row.slice());
       next[r][c] = player;
-      let winCheck = "";
+      let winCheck: Player | null = null;
 
       if (checkWin(next, r, c, player)) {
         setWinner(player);

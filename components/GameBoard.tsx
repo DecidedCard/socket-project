@@ -53,8 +53,7 @@ export default function GameBoard({ game }: { game: GameBoardReturn }) {
                           }`}
                         ></div>
                       ) : (
-                        (game.me && game.me.stone === game.player) ||
-                        (!item && (
+                        (!game.me || game.me.stone === game.player) && (
                           <button
                             onClick={() =>
                               game.onClickHandler(rowindex, index, game.player)
@@ -65,7 +64,7 @@ export default function GameBoard({ game }: { game: GameBoardReturn }) {
                                 : "border-2 bg-white"
                             }`}
                           ></button>
-                        ))
+                        )
                       )}
                     </div>
                   );
