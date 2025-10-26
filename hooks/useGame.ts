@@ -191,3 +191,5 @@ const useGameBoard = (id?: ParamValue) => {
 };
 
 export default useGameBoard;
+
+export type GameBoardReturn = ReturnType<typeof useGameBoard>;

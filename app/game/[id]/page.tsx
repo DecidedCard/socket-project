@@ -8,33 +8,11 @@ import React from "react";
 
 export default function Game() {
   const { id } = useParams();
-  const {
-    check,
-    me,
-    player,
-    members,
-    selectPlayer,
-    winner,
-    onClickUpdateStoneHandler,
-    onClickGameStartHandler,
-    onClickHandler,
-    onClickReset,
-  } = useGameBoard(id);
+  const game = useGameBoard(id);
 
-  return selectPlayer ? (
-    <GameBoard
-      check={check}
-      me={me}
-      player={player}
-      winner={winner}
-      onClickHandler={onClickHandler}
-      onClickReset={onClickReset}
-    />
+  return game.selectPlayer ? (
+    <GameBoard game={game} />
   ) : (
-    <SelectPlayer
-      members={members}
-      onClickUpdateStoneHandler={onClickUpdateStoneHandler}
-      onClickGameStartHandler={onClickGameStartHandler}
-    />
+    <SelectPlayer game={game} />
   );
 }
