@@ -1,6 +1,6 @@
 import { SIZE } from "@/const";
 import { Cell, Player } from "@/types";
-import { checkWin } from "@/utill";
+import { checkWin, resetGame } from "@/utill";
 import { supabase } from "@/utill/supabase/client";
 import { RealtimePresenceState } from "@supabase/supabase-js";
 import { ParamValue } from "next/dist/server/request/params";
@@ -99,9 +99,7 @@ const useGameBoard = (id?: ParamValue) => {
         }
       )
       .on("broadcast", { event: "reset" }, () => {
-        setCheck(Array.from({ length: SIZE }, () => Array(SIZE).fill(null)));
-        setPlayer(Player.Black);
-        setWinner(null);
+        resetGame({ setCheck, setPlayer, setWinner });
       })
       .subscribe(async (status) => {
         if (status === "SUBSCRIBED") {
@@ -178,9 +176,7 @@ const useGameBoard = (id?: ParamValue) => {
     if (id && channel) {
       channel.send({ type: "broadcast", event: "reset", payload: true });
     }
-    setCheck(Array.from({ length: SIZE }, () => Array(SIZE).fill(null)));
-    setPlayer(Player.Black);
-    setWinner(null);
+    resetGame({ setCheck, setPlayer, setWinner });
   };
 
   return {
