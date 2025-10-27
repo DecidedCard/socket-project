@@ -1,7 +1,7 @@
 import { SIZE } from "@/const";
 import { Cell, Player } from "@/types";
-import { checkWin, resetGame } from "@/utill";
-import { supabase } from "@/utill/supabase/client";
+import { checkWin, resetGame } from "@/util";
+import { supabase } from "@/util/supabase/client";
 import { RealtimePresenceState } from "@supabase/supabase-js";
 import { ParamValue } from "next/dist/server/request/params";
 import { useEffect, useMemo, useRef, useState } from "react";
