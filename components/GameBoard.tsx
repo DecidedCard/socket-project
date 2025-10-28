@@ -74,9 +74,6 @@ export default function GameBoard({ game }: { game: GameBoardReturn }) {
           })}
         </div>
       </article>
-      <button onClick={game.onClickReset} className="cursor-pointer">
-        초기화
-      </button>
       {game.winner && (
         <article className="absolute w-full h-full z-10 flex flex-col gap-10 items-center justify-center bg-black/60">
           <div className="h-14 rounded-2xl bg-white flex items-center px-10">

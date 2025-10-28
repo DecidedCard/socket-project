@@ -3,7 +3,8 @@ import path from "path";
 
 export default defineConfig({
   test: {
-    environment: "node",
+    environment: "jsdom",
+    setupFiles: ["./vitest.setup.ts"],
     globals: true,
     include: ["**/*.test.{ts,tsx}"],
   },
@@ -12,4 +13,5 @@ export default defineConfig({
       "@": path.resolve(__dirname, "."),
     },
   },
+  esbuild: { jsx: "automatic" },
 });
