@@ -3,6 +3,7 @@ import { Player } from "@/types";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import * as NextNav from "next/navigation";
+import { SIZE } from "@/const";
 
 // ✅ Next.js router mock
 vi.mock("next/navigation", () => ({
@@ -20,7 +21,7 @@ describe("GameBoard component", () => {
 
   beforeEach(() => {
     mockGame = {
-      check: Array.from({ length: 3 }, () => Array(3).fill(null)),
+      check: Array.from({ length: SIZE }, () => Array(SIZE).fill(null)),
       player: Player.Black,
       winner: null,
       me: { stone: Player.Black },
