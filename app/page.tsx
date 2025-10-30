@@ -51,21 +51,44 @@ export default function Home() {
   return (
     <main className="flex flex-col justify-evenly items-center h-full">
       <header>
-        <h1>오목</h1>
+        <h1 className="text-head_36_B lg:text-head_48_B">오목</h1>
       </header>
-      <button
-        className="cursor-pointer"
-        onClick={() => navigation.push("/game")}
-      >
-        게임시작
-      </button>
-      <button onClick={onClickCreateHandler}>방만들기</button>
-      <input
-        type="text"
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-      />
-      <button onClick={onClickEnterHandler}>방참가하기</button>
+      <article className="flex flex-col lg:flex-row gap-4">
+        <div className="flex flex-col gap-10 border p-4 rounded-2xl items-center justify-center">
+          <span className="text-body_20_B">로컬 플레이</span>
+          <button
+            onClick={() => navigation.push("/game")}
+            className="cursor-pointer border rounded-xl p-2"
+          >
+            게임시작
+          </button>
+        </div>
+
+        <div className="flex flex-col gap-10 border p-4 rounded-2xl items-center">
+          <span className="text-body_20_B">멀티플레이</span>
+          <button
+            onClick={onClickCreateHandler}
+            className="cursor-pointer border rounded-xl p-2"
+          >
+            방만들기
+          </button>
+          <div className="flex gap-4">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="방 번호를 입력해주세요"
+              className="border p-2 rounded-xl"
+            />
+            <button
+              onClick={onClickEnterHandler}
+              className="cursor-pointer border rounded-xl p-2"
+            >
+              방참가하기
+            </button>
+          </div>
+        </div>
+      </article>
     </main>
   );
 }
