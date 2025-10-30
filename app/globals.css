@@ -11,6 +11,10 @@
   --text-head_36: 36px;
   --text-head_36--font-weight: 500;
 
+  --text-body_20_B: 20px;
+  --text-body_20_B--font-weight: 700;
+  --text-body_18_B: 18px;
+  --text-body_18_B--font-weight: 700;
   --text-body_16_B: 16px;
   --text-body_16_B--font-weight: 700;
   --text-body_14_B: 14px;
@@ -18,6 +22,10 @@
   --text-body_12_B: 12px;
   --text-body_12_B--font-weight: 700;
 
+  --text-body_20: 20px;
+  --text-body_20--font-weight: 400;
+  --text-body_18: 18px;
+  --text-body_18--font-weight: 400;
   --text-body_16: 16px;
   --text-body_16--font-weight: 400;
   --text-body_14: 14px;
