@@ -1,6 +1,27 @@
 @import "tailwindcss";
 
 @theme {
+  --text-head_48_B: 48px;
+  --text-head_48_B--font-weight: 700;
+  --text-head_36_B: 36px;
+  --text-head_36_B--font-weight: 700;
+
   --text-head_48: 48px;
-  --text-head_48--font-weight: 700;
+  --text-head_48--font-weight: 500;
+  --text-head_36: 36px;
+  --text-head_36--font-weight: 500;
+
+  --text-body_16_B: 16px;
+  --text-body_16_B--font-weight: 700;
+  --text-body_14_B: 14px;
+  --text-body_14_B--font-weight: 700;
+  --text-body_12_B: 12px;
+  --text-body_12_B--font-weight: 700;
+
+  --text-body_16: 16px;
+  --text-body_16--font-weight: 400;
+  --text-body_14: 14px;
+  --text-body_14--font-weight: 400;
+  --text-body_12: 12px;
+  --text-body_12--font-weight: 400;
 }
