@@ -11,8 +11,9 @@ export default function GameBoard({ game }: { game: GameBoardReturn }) {
   return (
     <main className="flex h-full flex-col items-center justify-evenly px-20">
       <button
-        className="absolute top-2 left-2 cursor-pointer"
+        aria-label="뒤로가기"
         onClick={() => navigation.replace('/')}
+        className="absolute top-2 left-2 cursor-pointer"
       >
         <ArrowIcon type="Left" className="h-5 w-5 lg:h-8 lg:w-8" />
       </button>

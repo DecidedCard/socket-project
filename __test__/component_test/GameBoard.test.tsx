@@ -69,7 +69,7 @@ describe('GameBoard component', () => {
     vi.spyOn(NextNav, 'useRouter').mockReturnValue({ replace, back } as any)
 
     render(<GameBoard game={mockGame as GameBoardReturn} />)
-    const backButton = screen.getByText('뒤로가기')
+    const backButton = screen.getByRole('button', { name: '뒤로가기' })
     fireEvent.click(backButton)
 
     expect(replace).toHaveBeenCalledWith('/')
