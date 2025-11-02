@@ -3,6 +3,7 @@ import { GameBoardReturn, PresenceMeta } from "@/hooks/useGame";
 import { Player } from "@/types";
 import { useRouter } from "next/navigation";
 import React from "react";
+import ArrowIcon from "./ArrowIcon";
 
 export default function GameBoard({ game }: { game: GameBoardReturn }) {
   const navigation = useRouter();
@@ -10,10 +11,10 @@ export default function GameBoard({ game }: { game: GameBoardReturn }) {
   return (
     <main className="flex flex-col justify-evenly items-center h-full px-20">
       <button
-        className="absolute top-2 right-2 cursor-pointer"
+        className="absolute top-2 left-2 cursor-pointer"
         onClick={() => navigation.replace("/")}
       >
-        뒤로가기
+        <ArrowIcon type="Left" className="w-5 h-5 lg:w-8 lg:h-8" />
       </button>
       <article className="relative w-full max-w-[900px] aspect-square">
         <div className="flex flex-col border h-full">
@@ -58,7 +59,7 @@ export default function GameBoard({ game }: { game: GameBoardReturn }) {
                             onClick={() =>
                               game.onClickHandler(rowindex, index, game.player)
                             }
-                            className={`w-3/4 h-3/4 rounded-full hidden group-hover:block ${
+                            className={`w-3/4 h-3/4 rounded-full cursor-pointer hidden group-hover:block ${
                               game.player === Player.Black
                                 ? "bg-black"
                                 : "border-2 bg-white"
