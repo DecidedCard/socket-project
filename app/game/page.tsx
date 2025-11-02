@@ -1,11 +1,11 @@
-"use client";
+'use client'
 
-import GameBoard from "@/components/GameBoard";
-import useGameBoard from "@/hooks/useGame";
-import React from "react";
+import GameBoard from '@/components/GameBoard'
+import useGameBoard from '@/hooks/useGame'
+import React from 'react'
 
 export default function Game() {
-  const game = useGameBoard();
+  const game = useGameBoard()
 
-  return <GameBoard game={game} />;
+  return <GameBoard game={game} />
 }
