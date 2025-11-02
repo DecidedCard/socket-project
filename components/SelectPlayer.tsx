@@ -11,9 +11,11 @@ export default function SelectPlayer({ game }: { game: GameBoardReturn }) {
             플레이어
           </span>
           <div className="mt-4 flex flex-col items-center gap-1">
-            {game.members.map((i, idx) =>
-              !i.stone ? <span key={idx}>{i.nickname}</span> : false
-            )}
+            {game.members
+              .filter((member) => !member.stone)
+              .map((i) => (
+                <span key={i.id}>{i.nickname}</span>
+              ))}
           </div>
         </div>
         <div className="flex w-full justify-evenly">
@@ -22,8 +24,8 @@ export default function SelectPlayer({ game }: { game: GameBoardReturn }) {
             <span className="text-body_16_B">흑돌</span>
             {game.members
               .filter((i) => i.stone === Player.Black)
-              .map((i, idx) => (
-                <div key={idx}>{i.nickname}</div>
+              .map((i) => (
+                <div key={i.id}>{i.nickname}</div>
               ))}
             <button
               onClick={() => game.onClickUpdateStoneHandler(Player.Black)}
@@ -37,8 +39,8 @@ export default function SelectPlayer({ game }: { game: GameBoardReturn }) {
             <span className="text-body_16_B">백돌</span>
             {game.members
               .filter((i) => i.stone === Player.White)
-              .map((i, idx) => (
-                <div key={idx}>{i.nickname}</div>
+              .map((i) => (
+                <div key={i.id}>{i.nickname}</div>
               ))}
             <button
               onClick={() => game.onClickUpdateStoneHandler(Player.White)}

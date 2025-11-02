@@ -22,7 +22,9 @@ export default function Home() {
     navigation.push(`/game/${data[0].id}`)
   }
 
-  const onClickEnterHandler = async () => {
+  const onSubmitEnterHandler = async (e: React.FormEvent) => {
+    e.preventDefault()
+
     if (!input) {
       alert('참가할 방을 입력해주세요')
       return
@@ -72,7 +74,7 @@ export default function Home() {
           >
             방만들기
           </button>
-          <div className="flex gap-4">
+          <form onSubmit={onSubmitEnterHandler} className="flex gap-4">
             <input
               type="text"
               value={input}
@@ -81,12 +83,12 @@ export default function Home() {
               className="rounded-xl border p-2"
             />
             <button
-              onClick={onClickEnterHandler}
+              type="submit"
               className="cursor-pointer rounded-xl border p-2"
             >
               방참가하기
             </button>
-          </div>
+          </form>
         </div>
       </article>
     </main>
